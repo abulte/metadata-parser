@@ -4,8 +4,6 @@ from urllib.parse import urlparse
 
 import metadata_parser
 
-import debugserver
-
 
 class handler(BaseHTTPRequestHandler):
 
@@ -26,10 +24,7 @@ class handler(BaseHTTPRequestHandler):
         }
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Cache-Control', 'maxage=0, s-maxage=86400')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
         return
-
-
-if __name__ == '__main__':
-    debugserver.serve(handler)
