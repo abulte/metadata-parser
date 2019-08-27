@@ -18,6 +18,21 @@ class handler(BaseHTTPRequestHandler):
             metadatas[f] = value
         return metadatas
 
+    def add_cors_headers(self):
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range')  # noqa
+        self.send_header('Access-Control-Expose-Headers', 'Content-Length,Content-Range') # noqa
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.add_cors_headers()
+        self.send_header('Access-Control-Max-Age', 1728000)
+        self.send_header('Content-Type', 'text/plain; charset=utf-8')
+        self.send_header('Content-Length', 0)
+        self.end_headers()
+
     def do_GET(self):
         url = None
         query = urlparse(self.path).query
@@ -29,6 +44,7 @@ class handler(BaseHTTPRequestHandler):
             return
         data = self.get_metadatas(url)
         self.send_response(200)
+        self.add_cors_headers()
         self.send_header('Content-type', 'application/json')
         self.send_header('Cache-Control', 'maxage=0, s-maxage=86400')
         self.end_headers()
