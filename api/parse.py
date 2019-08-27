@@ -19,7 +19,6 @@ class handler(BaseHTTPRequestHandler):
         return metadatas
 
     def add_cors_headers(self):
-        self.send_header('Content-type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range')  # noqa
@@ -42,11 +41,16 @@ class handler(BaseHTTPRequestHandler):
         if not url:
             self.send_error(400, 'Missing url GET parameter')
             return
-        data = self.get_metadatas(url)
-        self.send_response(200)
-        self.add_cors_headers()
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Cache-Control', 'maxage=0, s-maxage=86400')
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
-        return
+        try:
+            data = self.get_metadatas(url)
+        except metadata_parser.NotParsable:
+            self.send_response(500)
+            data = {'error': 'Unable to parse url'}
+        else:
+            self.send_response(200)
+            self.send_header('Cache-Control', 'maxage=0, s-maxage=86400')
+        finally:
+            self.send_header('Content-type', 'application/json')
+            self.add_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode())
